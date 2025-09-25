@@ -6,9 +6,11 @@ import {
   BarChart3, 
   MessageCircle,
   Settings,
-  GraduationCap
+  GraduationCap,
+  LogOut
 } from "lucide-react";
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 import {
   Sidebar,
@@ -24,7 +26,7 @@ import {
 } from "@/components/ui/sidebar";
 
 const items = [
-  { title: "Dashboard", url: "/", icon: Home },
+  { title: "Dashboard", url: "/dashboard", icon: Home },
   { title: "Conteúdos", url: "/content", icon: BookOpen },
   { title: "Tutor IA", url: "/tutor", icon: Brain },
   { title: "Progresso", url: "/progress", icon: BarChart3 },
@@ -38,8 +40,15 @@ const secondaryItems = [
 export function AppSidebar() {
   const { state } = useSidebar();
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, signOut } = useAuth();
   const currentPath = location.pathname;
   const collapsed = state === "collapsed";
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
 
   const isActive = (path: string) => currentPath === path;
   const getNavCls = ({ isActive }: { isActive: boolean }) =>
@@ -60,7 +69,10 @@ export function AppSidebar() {
               <GraduationCap className="w-5 h-5 text-white" />
             </div>
             {!collapsed && (
-              <span className="font-bold text-lg text-foreground">StudyIA</span>
+              <div>
+                <span className="font-bold text-lg text-foreground">Eureka AI</span>
+                <p className="text-xs text-muted-foreground">{user?.email}</p>
+              </div>
             )}
           </div>
         </div>
@@ -111,6 +123,17 @@ export function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <button 
+                    onClick={handleSignOut}
+                    className="flex items-center gap-3 px-3 py-2 rounded-lg transition-all hover:bg-muted/50 text-muted-foreground hover:text-foreground w-full text-left"
+                  >
+                    <LogOut className="w-5 h-5 flex-shrink-0" />
+                    {!collapsed && <span>Sair</span>}
+                  </button>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
