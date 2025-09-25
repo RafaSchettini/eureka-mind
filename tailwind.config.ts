@@ -57,6 +57,27 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        // Educational platform colors
+        success: "hsl(var(--secondary))",
+        "success-foreground": "hsl(var(--secondary-foreground))",
+        ai: {
+          primary: "hsl(var(--ai-primary))",
+          secondary: "hsl(var(--ai-secondary))", 
+          accent: "hsl(var(--ai-accent))",
+        },
+      },
+      backgroundImage: {
+        "primary-gradient": "var(--primary-gradient)",
+        "success-gradient": "var(--success-gradient)",
+        "accent-gradient": "var(--accent-gradient)",
+        "progress-fill": "var(--progress-fill)",
+      },
+      boxShadow: {
+        "card": "var(--card-shadow)",
+        "card-hover": "var(--card-hover-shadow)",
+      },
+      transitionTimingFunction: {
+        "smooth": "var(--transition-smooth)",
       },
       borderRadius: {
         lg: "var(--radius)",
