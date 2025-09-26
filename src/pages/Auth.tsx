@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,8 +24,17 @@ const Auth = () => {
     password: '',
     fullName: '',
   });
+  const [searchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState('signin');
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab === 'signup' || tab === 'signin') {
+      setActiveTab(tab);
+    }
+  }, [searchParams]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -42,7 +51,7 @@ const Auth = () => {
       const validatedData = authSchema.parse(formData);
       const redirectUrl = `${window.location.origin}/content`;
 
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email: validatedData.email,
         password: validatedData.password,
         options: {
@@ -54,15 +63,16 @@ const Auth = () => {
       });
 
       if (error) {
-        if (error.message.includes('already registered')) {
-          toast({
-            variant: "destructive",
-            title: "Erro no cadastro",
-            description: "Este email já está cadastrado. Tente fazer login.",
-          });
-        } else {
-          throw error;
-        }
+        throw error;
+      }
+
+      // Verifica se o usuário já está confirmado (já cadastrado)
+      if (data.user && data.user.email_confirmed_at) {
+        toast({
+          variant: "destructive",
+          title: "Email já cadastrado",
+          description: "Este email já está cadastrado no sistema. Tente fazer login.",
+        });
       } else {
         toast({
           title: "Cadastro realizado!",
@@ -164,7 +174,7 @@ const Auth = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="signin" className="w-full">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="signin">Entrar</TabsTrigger>
                 <TabsTrigger value="signup">Cadastrar</TabsTrigger>

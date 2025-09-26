@@ -2,12 +2,16 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
 import { Bell, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { UserModal } from "@/components/modals/UserModal";
+import { useState } from "react";
 
 interface AppLayoutProps {
   children: React.ReactNode;
 }
 
 export function AppLayout({ children }: AppLayoutProps) {
+  const [userModalOpen, setUserModalOpen] = useState(false);
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
@@ -27,7 +31,12 @@ export function AppLayout({ children }: AppLayoutProps) {
               <Button variant="ghost" size="icon" className="hover:bg-muted/50">
                 <Bell className="w-5 h-5" />
               </Button>
-              <Button variant="ghost" size="icon" className="hover:bg-muted/50">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="hover:bg-muted/50"
+                onClick={() => setUserModalOpen(true)}
+              >
                 <User className="w-5 h-5" />
               </Button>
             </div>
@@ -39,6 +48,11 @@ export function AppLayout({ children }: AppLayoutProps) {
           </main>
         </div>
       </div>
+      
+      <UserModal 
+        open={userModalOpen} 
+        onOpenChange={setUserModalOpen} 
+      />
     </SidebarProvider>
   );
 }

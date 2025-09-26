@@ -44,10 +44,10 @@ const Index = () => {
             ) : (
               <>
                 <Button asChild variant="ghost">
-                  <Link to="/auth">Entrar</Link>
+                  <Link to="/auth?tab=signin">Entrar</Link>
                 </Button>
                 <Button asChild>
-                  <Link to="/auth">Cadastrar</Link>
+                  <Link to="/auth?tab=signup">Cadastrar</Link>
                 </Button>
               </>
             )}
@@ -83,13 +83,13 @@ const Index = () => {
               ) : (
                 <>
                   <Button asChild size="lg" className="bg-gradient-elegant text-white border-0 hover:shadow-glow transition-all duration-300">
-                    <Link to="/auth">
+                    <Link to="/auth?tab=signup">
                       <LogIn className="mr-2 h-4 w-4" />
                       Começar Agora
                     </Link>
                   </Button>
                   <Button asChild variant="outline" size="lg">
-                    <Link to="/auth">
+                    <Link to="/auth?tab=signin">
                       Saiba Mais
                     </Link>
                   </Button>
