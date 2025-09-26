@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { BookOpen, Brain, Target, Users, LogIn, ArrowRight } from "lucide-react";
+import { BookOpen, Brain, Target, Users, LogIn, ArrowRight, User } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import heroImage from "@/assets/hero-platform.jpg";
@@ -20,17 +20,38 @@ const Index = () => {
               Eureka AI
             </h1>
           </div>
+
+          <nav className="hidden md:flex items-center gap-6">
+            <Link to="#features" className="text-muted-foreground hover:text-foreground transition-colors">
+              Recursos
+            </Link>
+            <Link to="#pricing" className="text-muted-foreground hover:text-foreground transition-colors">
+              Preços
+            </Link>
+            <Link to="#contact" className="text-muted-foreground hover:text-foreground transition-colors">
+              Contato
+            </Link>
+          </nav>
           
-          {!user && (
-            <div className="flex gap-2">
-              <Button asChild variant="ghost">
-                <Link to="/auth">Entrar</Link>
+          <div className="flex items-center gap-2">
+            {user ? (
+              <Button asChild variant="outline">
+                <Link to="/content">
+                  <User className="mr-2 h-4 w-4" />
+                  Minha Conta
+                </Link>
               </Button>
-              <Button asChild>
-                <Link to="/auth">Cadastrar</Link>
-              </Button>
-            </div>
-          )}
+            ) : (
+              <>
+                <Button asChild variant="ghost">
+                  <Link to="/auth">Entrar</Link>
+                </Button>
+                <Button asChild>
+                  <Link to="/auth">Cadastrar</Link>
+                </Button>
+              </>
+            )}
+          </div>
         </div>
       </header>
 

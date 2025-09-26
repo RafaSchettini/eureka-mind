@@ -1,11 +1,8 @@
-import { useState } from "react";
 import { 
   Home, 
   BookOpen, 
   Brain, 
   BarChart3, 
-  MessageCircle,
-  Settings,
   GraduationCap,
   LogOut
 } from "lucide-react";
@@ -30,11 +27,6 @@ const items = [
   { title: "Conteúdos", url: "/content", icon: BookOpen },
   { title: "Tutor IA", url: "/tutor", icon: Brain },
   { title: "Progresso", url: "/progress", icon: BarChart3 },
-  { title: "Quizzes", url: "/quizzes", icon: MessageCircle },
-];
-
-const secondaryItems = [
-  { title: "Configurações", url: "/settings", icon: Settings },
 ];
 
 export function AppSidebar() {
@@ -104,25 +96,10 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Secondary Navigation */}
+        {/* Logout */}
         <SidebarGroup className="mt-auto">
           <SidebarGroupContent>
             <SidebarMenu>
-              {secondaryItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <NavLink 
-                      to={item.url} 
-                      className={({ isActive }) => 
-                        `flex items-center gap-3 px-3 py-2 rounded-lg transition-all ${getNavCls({ isActive })}`
-                      }
-                    >
-                      <item.icon className="w-5 h-5 flex-shrink-0" />
-                      {!collapsed && <span>{item.title}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <button 

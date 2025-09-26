@@ -33,6 +33,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+        
+        // Handle email confirmation success
+        if (event === 'SIGNED_IN' && session) {
+          // Check if this is a redirect from email confirmation
+          const url = new URL(window.location.href);
+          if (url.searchParams.get('type') === 'signup') {
+            setTimeout(() => {
+              toast({
+                title: "Email verificado!",
+                description: "Sua conta foi confirmada com sucesso. Bem-vindo!",
+              });
+            }, 100);
+          }
+        }
       }
     );
 
