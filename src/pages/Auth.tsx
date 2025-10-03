@@ -79,18 +79,24 @@ const Auth = () => {
           description: "Verifique seu email para confirmar a conta.",
         });
       }
-    } catch (error: any) {
+    } catch (error) {
       if (error instanceof z.ZodError) {
         toast({
           variant: "destructive",
           title: "Dados inválidos",
           description: error.issues[0].message,
         });
-      } else {
+      } else if (error instanceof Error) {
         toast({
           variant: "destructive",
           title: "Erro no cadastro",
           description: error.message,
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Erro no cadastro",
+          description: String(error),
         });
       }
     } finally {
@@ -130,18 +136,24 @@ const Auth = () => {
         });
         navigate('/dashboard');
       }
-    } catch (error: any) {
+    } catch (error) {
       if (error instanceof z.ZodError) {
         toast({
           variant: "destructive",
           title: "Dados inválidos",
           description: error.issues[0].message,
         });
-      } else {
+      } else if (error instanceof Error) {
         toast({
           variant: "destructive",
           title: "Erro no login",
           description: error.message,
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Erro no login",
+          description: String(error),
         });
       }
     } finally {

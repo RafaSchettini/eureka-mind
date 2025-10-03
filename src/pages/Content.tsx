@@ -1,193 +1,302 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { 
-  BookOpen, 
-  Play, 
-  FileText, 
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  BookOpen,
+  Play,
+  FileText,
   Search,
-  Filter,
   Clock,
-  Star
+  Star,
+  Loader2,
+  Target,
+  GraduationCap,
+  Brain,
+  Globe
 } from "lucide-react";
 import heroImage from "@/assets/hero-platform.jpg";
+import { useContents } from "@/hooks/useContents";
+import { useUserProgress } from "@/hooks/useProgress";
+import { useYouTube } from "@/hooks/useYouTube";
+import { useTrivia } from "@/hooks/useTrivia";
+import { useWikipedia } from "@/hooks/useWikipedia";
+import { Tables } from "@/integrations/supabase/types";
+import { YouTubeVideoPlayer, YouTubeVideoGrid, YouTubeVideoFilters } from "@/components/videos/YouTubePlayer";
+import { QuizSetup } from "@/components/quiz/QuizSetup";
+import { QuizPlayer, QuizResults } from "@/components/quiz/QuizPlayer";
+import { ArticleGrid, ArticleViewer, ArticleFilters } from "@/components/articles/ArticleComponents";
+import { YouTubeVideo, EducationalPlaylist } from "@/lib/youtube-api.types";
+import { TriviaQuestion, QuizAttempt } from "@/lib/external-apis.types";
+import { EducationalArticle } from "@/lib/wikipedia-api.types";
 
-interface ContentItem {
-  id: number;
-  title: string;
-  description: string;
-  type: "video" | "article" | "pdf";
-  duration: string;
-  difficulty: "iniciante" | "intermediário" | "avançado";
-  rating: number;
-  thumbnail?: string;
-}
+type Content = Tables<'contents'>;
 
 export default function Content() {
-  const contentItems: ContentItem[] = [
-    {
-      id: 1,
-      title: "Introdução à Inteligência Artificial",
-      description: "Conceitos fundamentais de IA, história e aplicações práticas no mundo moderno.",
-      type: "video",
-      duration: "45min",
-      difficulty: "iniciante",
-      rating: 4.8
-    },
-    {
-      id: 2,
-      title: "Estruturas de Dados em Python",
-      description: "Aprenda listas, tuplas, dicionários e sets com exemplos práticos e exercícios.",
-      type: "article",
-      duration: "30min",
-      difficulty: "intermediário",
-      rating: 4.6
-    },
-    {
-      id: 3,
-      title: "Algoritmos de Machine Learning",
-      description: "Guia completo sobre algoritmos de ML: regressão, classificação e clustering.",
-      type: "pdf",
-      duration: "2h",
-      difficulty: "avançado",
-      rating: 4.9
-    },
-    {
-      id: 4,
-      title: "Desenvolvimento Web com React",
-      description: "Curso prático de React desde o básico até conceitos avançados como hooks e context.",
-      type: "video",
-      duration: "3h 20min",
-      difficulty: "intermediário",
-      rating: 4.7
-    },
-    {
-      id: 5,
-      title: "Banco de Dados SQL",
-      description: "Fundamentos de SQL, consultas avançadas e design de banco de dados relacionais.",
-      type: "article",
-      duration: "1h 15min",
-      difficulty: "iniciante",
-      rating: 4.5
-    },
-    {
-      id: 6,
-      title: "Deep Learning e Redes Neurais",
-      description: "Conceitos avançados de deep learning, CNN, RNN e transformers.",
-      type: "pdf",
-      duration: "4h",
-      difficulty: "avançado",
-      rating: 4.8
-    }
-  ];
+  // Estados para YouTube
+  const [selectedVideo, setSelectedVideo] = useState<YouTubeVideo | null>(null);
+  const [videoSearchTerm, setVideoSearchTerm] = useState("");
+  const [selectedPlaylist, setSelectedPlaylist] = useState<EducationalPlaylist | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string>("programming");
 
-  const getTypeIcon = (type: string) => {
-    switch (type) {
-      case "video":
-        return <Play className="w-4 h-4" />;
-      case "article":
-        return <BookOpen className="w-4 h-4" />;
-      case "pdf":
-        return <FileText className="w-4 h-4" />;
+  // Estados para Quiz
+  const [quizState, setQuizState] = useState<'setup' | 'playing' | 'results'>('setup');
+  const [currentQuizQuestions, setCurrentQuizQuestions] = useState<TriviaQuestion[]>([]);
+  const [quizResult, setQuizResult] = useState<QuizAttempt | null>(null);
+
+  // Estados para artigos Wikipedia
+  const [selectedArticle, setSelectedArticle] = useState<EducationalArticle | null>(null);
+  const [selectedArticleCategory, setSelectedArticleCategory] = useState<string>('mathematics');
+
+  const { updateProgress } = useUserProgress();
+
+  // YouTube hooks
+  const {
+    videos,
+    playlists,
+    loading: youtubeLoading,
+    searchVideos,
+    getPlaylistVideos,
+    getVideosByCategory,
+    refreshContent
+  } = useYouTube();
+
+  // Trivia hooks
+  const {
+    categories,
+    loading: triviaLoading
+  } = useTrivia();
+
+  // Wikipedia hooks
+  const {
+    articles,
+    loading: wikiLoading,
+    searchArticles,
+    getEducationalContent,
+    getAllEducationalContent
+  } = useWikipedia();
+
+  // Handlers para YouTube
+  const handleVideoSearch = (query: string) => {
+    setVideoSearchTerm(query);
+    if (query.trim()) {
+      searchVideos(query);
     }
   };
 
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case "iniciante":
-        return "bg-success text-success-foreground";
-      case "intermediário":
-        return "bg-primary text-primary-foreground";
-      case "avançado":
-        return "bg-accent text-accent-foreground";
+  const handlePlaylistSelect = (playlistId: string) => {
+    const playlist = playlists.find(p => p.id === playlistId);
+    setSelectedPlaylist(playlist || null);
+    if (playlistId) {
+      getPlaylistVideos(playlistId);
+    }
+  };
+
+  const handleCategorySelect = (category: string) => {
+    setSelectedCategory(category);
+    if (category && category.trim() !== '') {
+      // Categoria específica selecionada
+      getVideosByCategory(category);
+    } else {
+      // "Todas as categorias" selecionada - carrega conteúdo inicial (todos os vídeos)
+      refreshContent();
+    }
+  };
+
+  // Handlers para Quiz
+  const handleStartQuiz = (questions: TriviaQuestion[]) => {
+    setCurrentQuizQuestions(questions);
+    setQuizState('playing');
+  };
+
+  const handleQuizComplete = (attempt: QuizAttempt) => {
+    setQuizResult(attempt);
+    setQuizState('results');
+    // Aqui você pode salvar o resultado no Supabase
+    console.log('Quiz finalizado:', attempt);
+  };
+
+  const handleQuizRestart = () => {
+    setQuizState('setup');
+    setQuizResult(null);
+    setCurrentQuizQuestions([]);
+  };
+
+  const handleQuizExit = () => {
+    setQuizState('setup');
+    setCurrentQuizQuestions([]);
+  };
+
+  // Handlers para Wikipedia
+  const handleArticleSearch = async (query: string) => {
+    if (query.trim()) {
+      await searchArticles(query);
+    } else if (selectedArticleCategory) {
+      await getEducationalContent(selectedArticleCategory);
+    }
+  };
+
+  const handleArticleCategorySelect = async (category: string) => {
+    setSelectedArticleCategory(category);
+    if (category && category.trim() !== '') {
+      // Categoria específica selecionada
+      await getEducationalContent(category);
+    } else {
+      // "Todas as categorias" selecionada - carrega artigos de todas as categorias
+      await getAllEducationalContent();
     }
   };
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="space-y-4">
-        <h1 className="text-3xl font-bold text-foreground">
-          Biblioteca de Conteúdos
-        </h1>
-        <p className="text-muted-foreground">
-          Explore nossa coleção curada de materiais de estudo em diversas áreas da tecnologia.
-        </p>
-
-        {/* Hero Image */}
-        <div className="relative rounded-lg overflow-hidden">
-          <img 
-            src={heroImage} 
-            alt="Plataforma de estudos com IA" 
-            className="w-full h-48 object-cover"
-          />
-          <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-            <div className="text-center text-white">
-              <h2 className="text-2xl font-bold mb-2">Aprenda com IA Personalizada</h2>
-              <p className="text-white/90">Conteúdos adaptados ao seu ritmo e nível de conhecimento</p>
-            </div>
+      {/* Hero Section */}
+      <div className="relative h-48 rounded-lg overflow-hidden">
+        <img
+          src={heroImage}
+          alt="Plataforma de Estudos"
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+          <div className="text-center text-white">
+            <h1 className="text-3xl font-bold mb-2">Centro de Conteúdos</h1>
+            <p className="text-lg opacity-90">
+              Explore materiais de estudo, vídeos educacionais e quizzes interativos
+            </p>
           </div>
         </div>
+      </div>
 
-        {/* Search and Filters */}
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="relative flex-1">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
-            <Input 
-              placeholder="Buscar conteúdos..." 
-              className="pl-10"
+      {/* Tabs para diferentes tipos de conteúdo */}
+      <Tabs defaultValue="estudos" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="estudos" className="flex items-center gap-2">
+            <BookOpen className="w-4 h-4" />
+            Estudos
+          </TabsTrigger>
+          <TabsTrigger value="questoes" className="flex items-center gap-2">
+            <Target className="w-4 h-4" />
+            Questões
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Aba de Estudos (Vídeos + Artigos) */}
+        <TabsContent value="estudos" className="space-y-6">
+          <Tabs defaultValue="videos" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="videos" className="flex items-center gap-2">
+                <Play className="w-4 h-4" />
+                Vídeoaulas
+              </TabsTrigger>
+              <TabsTrigger value="artigos" className="flex items-center gap-2">
+                <Globe className="w-4 h-4" />
+                Artigos
+              </TabsTrigger>
+            </TabsList>
+
+            {/* Sub-aba de Vídeos */}
+            <TabsContent value="videos" className="space-y-6">
+              {selectedVideo ? (
+                <div className="space-y-6">
+                  <Button
+                    variant="outline"
+                    onClick={() => setSelectedVideo(null)}
+                    className="mb-4"
+                  >
+                    ← Voltar para vídeos
+                  </Button>
+                  <YouTubeVideoPlayer
+                    video={selectedVideo}
+                    autoplay={false}
+                  />
+                </div>
+              ) : (
+                <>
+                  <YouTubeVideoFilters
+                    onSearch={handleVideoSearch}
+                    onCategorySelect={handleCategorySelect}
+                    onPlaylistSelect={handlePlaylistSelect}
+                    categories={['mathematics', 'programming', 'science', 'technology', 'general']}
+                    playlists={playlists.map(p => ({ id: p.id, title: p.title, subject: p.subject }))}
+                    selectedCategory={selectedCategory}
+                    selectedPlaylist={selectedPlaylist?.id}
+                  />
+
+                  {youtubeLoading ? (
+                    <div className="flex items-center justify-center py-12">
+                      <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                      <span className="ml-2 text-muted-foreground">Carregando vídeos...</span>
+                    </div>
+                  ) : (
+                    <YouTubeVideoGrid
+                      videos={videos}
+                      onVideoSelect={setSelectedVideo}
+                      loading={youtubeLoading}
+                    />
+                  )}
+                </>
+              )}
+            </TabsContent>
+
+            {/* Sub-aba de Artigos */}
+            <TabsContent value="artigos" className="space-y-6">
+              {selectedArticle ? (
+                <ArticleViewer
+                  article={selectedArticle}
+                  onBack={() => setSelectedArticle(null)}
+                />
+              ) : (
+                <>
+                  <ArticleFilters
+                    onSearch={handleArticleSearch}
+                    onCategorySelect={handleArticleCategorySelect}
+                    categories={['mathematics', 'programming', 'science', 'technology', 'general']}
+                    selectedCategory={selectedArticleCategory}
+                  />
+
+                  <ArticleGrid
+                    articles={articles}
+                    onArticleSelect={setSelectedArticle}
+                    selectedArticle={selectedArticle || undefined}
+                    loading={wikiLoading}
+                  />
+                </>
+              )}
+            </TabsContent>
+          </Tabs>
+        </TabsContent>
+
+        {/* Aba de Questões (Quiz de Revisão) */}
+        <TabsContent value="questoes" className="space-y-6">
+          <div className="text-center mb-6">
+            <h2 className="text-2xl font-bold mb-2">🎯 Questões de Revisão</h2>
+            <p className="text-muted-foreground">
+              Teste seus conhecimentos com quizzes interativos sobre os assuntos estudados
+            </p>
+          </div>
+
+          {quizState === 'setup' && (
+            <QuizSetup onStartQuiz={handleStartQuiz} />
+          )}
+
+          {quizState === 'playing' && (
+            <QuizPlayer
+              questions={currentQuizQuestions}
+              onQuizComplete={handleQuizComplete}
+              onQuizExit={handleQuizExit}
             />
-          </div>
-          <Button variant="outline" className="flex items-center gap-2">
-            <Filter className="w-4 h-4" />
-            Filtros
-          </Button>
-        </div>
-      </div>
+          )}
 
-      {/* Content Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {contentItems.map((item) => (
-          <Card key={item.id} className="shadow-card hover:shadow-card-hover transition-all duration-300 group">
-            <CardHeader className="pb-3">
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  {getTypeIcon(item.type)}
-                  <span className="text-xs uppercase font-medium">{item.type}</span>
-                </div>
-                <Badge variant="secondary" className={getDifficultyColor(item.difficulty)}>
-                  {item.difficulty}
-                </Badge>
-              </div>
-              <CardTitle className="group-hover:text-primary transition-colors">
-                {item.title}
-              </CardTitle>
-            </CardHeader>
-            
-            <CardContent className="space-y-4">
-              <p className="text-sm text-muted-foreground line-clamp-3">
-                {item.description}
-              </p>
-              
-              <div className="flex items-center justify-between text-sm">
-                <div className="flex items-center gap-1 text-muted-foreground">
-                  <Clock className="w-3 h-3" />
-                  <span>{item.duration}</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                  <span className="text-foreground font-medium">{item.rating}</span>
-                </div>
-              </div>
-              
-              <Button className="w-full bg-primary-gradient hover:opacity-90">
-                Começar Estudo
-              </Button>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+          {quizState === 'results' && quizResult && (
+            <QuizResults
+              attempt={quizResult}
+              onRestart={handleQuizRestart}
+              onExit={handleQuizExit}
+            />
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

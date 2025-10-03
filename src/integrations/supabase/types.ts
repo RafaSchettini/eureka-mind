@@ -14,6 +14,142 @@ export type Database = {
   }
   public: {
     Tables: {
+      achievements: {
+        Row: {
+          id: string
+          title: string
+          description: string
+          icon: string | null
+          criteria_type: string
+          criteria_value: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          description: string
+          icon?: string | null
+          criteria_type: string
+          criteria_value: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          description?: string
+          icon?: string | null
+          criteria_type?: string
+          criteria_value?: number
+          created_at?: string
+        }
+        Relationships: []
+      }
+      ai_conversations: {
+        Row: {
+          id: string
+          user_id: string
+          title: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          title?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          title?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      ai_messages: {
+        Row: {
+          id: string
+          conversation_id: string
+          role: 'user' | 'ai'
+          content: string
+          suggestions: string[] | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          conversation_id: string
+          role: 'user' | 'ai'
+          content: string
+          suggestions?: string[] | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          conversation_id?: string
+          role?: 'user' | 'ai'
+          content?: string
+          suggestions?: string[] | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            referencedRelation: "ai_conversations"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      contents: {
+        Row: {
+          id: string
+          title: string
+          description: string
+          type: 'video' | 'article' | 'pdf' | 'quiz'
+          difficulty: 'iniciante' | 'intermediário' | 'avançado'
+          duration: string
+          rating: number
+          thumbnail_url: string | null
+          content_url: string | null
+          subject: string | null
+          tags: string[] | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          description: string
+          type: 'video' | 'article' | 'pdf' | 'quiz'
+          difficulty: 'iniciante' | 'intermediário' | 'avançado'
+          duration: string
+          rating?: number
+          thumbnail_url?: string | null
+          content_url?: string | null
+          subject?: string | null
+          tags?: string[] | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          description?: string
+          type?: 'video' | 'article' | 'pdf' | 'quiz'
+          difficulty?: 'iniciante' | 'intermediário' | 'avançado'
+          duration?: string
+          rating?: number
+          thumbnail_url?: string | null
+          content_url?: string | null
+          subject?: string | null
+          tags?: string[] | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -40,6 +176,120 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      study_sessions: {
+        Row: {
+          id: string
+          user_id: string
+          content_id: string | null
+          started_at: string
+          ended_at: string | null
+          duration_minutes: number | null
+          notes: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          content_id?: string | null
+          started_at?: string
+          ended_at?: string | null
+          duration_minutes?: number | null
+          notes?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          content_id?: string | null
+          started_at?: string
+          ended_at?: string | null
+          duration_minutes?: number | null
+          notes?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "study_sessions_content_id_fkey"
+            columns: ["content_id"]
+            referencedRelation: "contents"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      user_achievements: {
+        Row: {
+          id: string
+          user_id: string
+          achievement_id: string
+          unlocked_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          achievement_id: string
+          unlocked_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          achievement_id?: string
+          unlocked_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_achievements_achievement_id_fkey"
+            columns: ["achievement_id"]
+            referencedRelation: "achievements"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      user_progress: {
+        Row: {
+          id: string
+          user_id: string
+          content_id: string
+          status: 'not_started' | 'in_progress' | 'completed'
+          progress_percentage: number
+          time_spent_minutes: number
+          last_accessed_at: string | null
+          completed_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          content_id: string
+          status: 'not_started' | 'in_progress' | 'completed'
+          progress_percentage?: number
+          time_spent_minutes?: number
+          last_accessed_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          content_id?: string
+          status?: 'not_started' | 'in_progress' | 'completed'
+          progress_percentage?: number
+          time_spent_minutes?: number
+          last_accessed_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_progress_content_id_fkey"
+            columns: ["content_id"]
+            referencedRelation: "contents"
+            referencedColumns: ["id"]
+          }
+        ]
       }
     }
     Views: {
