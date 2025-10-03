@@ -30,23 +30,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        // Handle email confirmation - sign out and show message
+        const url = new URL(window.location.href);
+        if (event === 'SIGNED_IN' && url.searchParams.get('type') === 'signup') {
+          // User just confirmed email, sign them out and show toast
+          setTimeout(async () => {
+            await supabase.auth.signOut();
+            setSession(null);
+            setUser(null);
+            setLoading(false);
+            
+            toast({
+              title: "Email verificado!",
+              description: "Sua conta foi confirmada com sucesso. Faça login para continuar.",
+            });
+          }, 0);
+          return;
+        }
+
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
-        
-        // Handle email confirmation success
-        if (event === 'SIGNED_IN' && session) {
-          // Check if this is a redirect from email confirmation
-          const url = new URL(window.location.href);
-          if (url.searchParams.get('type') === 'signup') {
-            setTimeout(() => {
-              toast({
-                title: "Email verificado!",
-                description: "Sua conta foi confirmada com sucesso. Bem-vindo!",
-              });
-            }, 100);
-          }
-        }
       }
     );
 

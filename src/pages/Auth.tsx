@@ -49,7 +49,7 @@ const Auth = () => {
 
     try {
       const validatedData = authSchema.parse(formData);
-      const redirectUrl = `${window.location.origin}/content`;
+      const redirectUrl = `${window.location.origin}/auth?tab=signin`;
 
       const { data, error } = await supabase.auth.signUp({
         email: validatedData.email,
@@ -67,11 +67,22 @@ const Auth = () => {
       }
 
       // Verifica se o usuário já está confirmado (já cadastrado)
-      if (data.user && data.user.email_confirmed_at) {
+      // Quando o email já existe, o Supabase retorna user mas não envia email
+      if (data.user && data.user.identities && data.user.identities.length === 0) {
         toast({
           variant: "destructive",
           title: "Email já cadastrado",
-          description: "Este email já está cadastrado no sistema. Tente fazer login.",
+          description: "Este email já está cadastrado no sistema.",
+          action: (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setActiveTab('signin')}
+              className="ml-auto"
+            >
+              Fazer login
+            </Button>
+          ),
         });
       } else {
         toast({
