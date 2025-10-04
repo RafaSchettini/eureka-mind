@@ -103,11 +103,11 @@ export function QuizSetup({ onStartQuiz }: QuizSetupProps) {
                 >
                   <Badge 
                     variant="outline" 
-                    className={getDifficultyColor(difficulty)}
+                    className={`${getDifficultyColor(difficulty)} whitespace-nowrap`}
                   >
                     {difficulty === 'easy' ? 'Fácil' : difficulty === 'medium' ? 'Médio' : 'Difícil'}
                   </Badge>
-                  <span className="text-xs text-muted-foreground text-center">
+                  <span className="text-xs text-muted-foreground text-center break-words">
                     {getDifficultyDescription(difficulty)}
                   </span>
                 </Button>
