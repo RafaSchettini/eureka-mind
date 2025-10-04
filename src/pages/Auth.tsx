@@ -34,7 +34,35 @@ const Auth = () => {
     if (tab === 'signup' || tab === 'signin') {
       setActiveTab(tab);
     }
-  }, [searchParams]);
+
+    // Verificar se é um retorno de confirmação de email
+    const handleEmailConfirmation = async () => {
+      const { data, error } = await supabase.auth.getSession();
+      
+      if (data.session) {
+        // Se há uma sessão ativa, significa que o email foi confirmado
+        // Mas queremos deslogar o usuário para que ele faça login manualmente
+        await supabase.auth.signOut();
+        
+        toast({
+          title: "Email confirmado!",
+          description: "Sua conta foi confirmada com sucesso. Faça login para continuar.",
+        });
+        
+        // Garantir que está na aba de login
+        setActiveTab('signin');
+        
+        // Limpar a URL para remover tokens de confirmação
+        navigate('/auth?tab=signin', { replace: true });
+      }
+    };
+
+    // Verificar se há tokens de confirmação na URL
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('access_token') || urlParams.has('refresh_token')) {
+      handleEmailConfirmation();
+    }
+  }, [searchParams, navigate, toast]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -49,7 +77,10 @@ const Auth = () => {
 
     try {
       const validatedData = authSchema.parse(formData);
-      const redirectUrl = `${window.location.origin}/auth?tab=signin`;
+      
+      // Usar a URL atual correta para redirecionamento
+      const baseUrl = window.location.origin;
+      const redirectUrl = `${baseUrl}/auth?tab=signin&confirmed=true`;
 
       const { data, error } = await supabase.auth.signUp({
         email: validatedData.email,
@@ -84,28 +115,36 @@ const Auth = () => {
           ),
         });
       } else {
-        // Envia email de confirmação customizado
+        // Enviar email de confirmação customizado (se disponível)
         try {
-          const confirmationUrl = `${window.location.origin}/auth?tab=signin`;
-          
           await supabase.functions.invoke('send-confirmation-email', {
             body: {
               email: validatedData.email,
               fullName: validatedData.fullName,
-              confirmationUrl: confirmationUrl
+              confirmationUrl: redirectUrl
             }
           });
-
-          console.log("Email de confirmação enviado");
+          
+          console.log("Email de confirmação customizado enviado");
         } catch (emailError) {
-          console.error("Erro ao enviar email de confirmação:", emailError);
-          // Não bloqueamos o cadastro se o email falhar
+          console.error("Erro ao enviar email customizado:", emailError);
+          // Se falhar, o Supabase já enviou o email padrão
         }
 
         toast({
           title: "Cadastro realizado!",
-          description: "Verifique seu email para confirmar a conta.",
+          description: "Verifique seu email para confirmar a conta e depois faça login.",
         });
+        
+        // Limpar o formulário após cadastro bem-sucedido
+        setFormData({
+          email: '',
+          password: '',
+          fullName: '',
+        });
+        
+        // Mudar para a aba de login
+        setActiveTab('signin');
       }
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -210,7 +249,10 @@ const Auth = () => {
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl font-semibold">Acesse sua conta</CardTitle>
             <CardDescription>
-              Entre ou crie uma nova conta para começar
+              {activeTab === 'signin' ? 
+                'Entre com suas credenciais para continuar' : 
+                'Crie uma nova conta para começar'
+              }
             </CardDescription>
           </CardHeader>
           <CardContent>
