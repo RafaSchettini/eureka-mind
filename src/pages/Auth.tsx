@@ -67,7 +67,6 @@ const Auth = () => {
       }
 
       // Verifica se o usuário já está confirmado (já cadastrado)
-      // Quando o email já existe, o Supabase retorna user mas não envia email
       if (data.user && data.user.identities && data.user.identities.length === 0) {
         toast({
           variant: "destructive",
@@ -85,6 +84,24 @@ const Auth = () => {
           ),
         });
       } else {
+        // Envia email de confirmação customizado
+        try {
+          const confirmationUrl = `${window.location.origin}/auth?tab=signin`;
+          
+          await supabase.functions.invoke('send-confirmation-email', {
+            body: {
+              email: validatedData.email,
+              fullName: validatedData.fullName,
+              confirmationUrl: confirmationUrl
+            }
+          });
+
+          console.log("Email de confirmação enviado");
+        } catch (emailError) {
+          console.error("Erro ao enviar email de confirmação:", emailError);
+          // Não bloqueamos o cadastro se o email falhar
+        }
+
         toast({
           title: "Cadastro realizado!",
           description: "Verifique seu email para confirmar a conta.",
