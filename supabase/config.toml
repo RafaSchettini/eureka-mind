@@ -2,3 +2,6 @@ project_id = "ftpdhzcyfcuirvnfzobb"
 
 [functions.send-confirmation-email]
 verify_jwt = false
+
+[functions.learning-api]
+verify_jwt = false

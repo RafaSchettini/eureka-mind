@@ -39,12 +39,12 @@ export function QuizSetup({ onStartQuiz }: QuizSetupProps) {
   };
 
   const getDifficultyDescription = (difficulty: string) => {
-    /* switch (difficulty) {
+    switch (difficulty) {
       case 'easy': return 'Questões básicas - 10 pontos cada';
       case 'medium': return 'Questões intermediárias - 20 pontos cada';
       case 'hard': return 'Questões avançadas - 30 pontos cada';
       default: return '';
-    } */
+    }
   };
 
   const getDifficultyColor = (difficulty: string) => {
