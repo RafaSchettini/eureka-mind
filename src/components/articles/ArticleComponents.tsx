@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { BookOpen, ExternalLink, Clock, Search, Globe, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import DOMPurify from 'dompurify';
 
 interface ArticleGridProps {
   articles: EducationalArticle[];
@@ -188,7 +189,12 @@ export function ArticleViewer({ article, onBack }: ArticleViewerProps) {
         <CardContent className="space-y-6">
           {article.content && (
             <div className="prose prose-sm max-w-none">
-              <div dangerouslySetInnerHTML={{ __html: article.content }} />
+              <div dangerouslySetInnerHTML={{ 
+                __html: DOMPurify.sanitize(article.content, {
+                  ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'a', 'blockquote', 'code', 'pre'],
+                  ALLOWED_ATTR: ['href', 'target', 'rel']
+                })
+              }} />
             </div>
           )}
 

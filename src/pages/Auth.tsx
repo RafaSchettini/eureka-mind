@@ -125,9 +125,9 @@ const Auth = () => {
             }
           });
           
-          console.log("Email de confirmação customizado enviado");
+          // Email sent successfully
         } catch (emailError) {
-          console.error("Erro ao enviar email customizado:", emailError);
+          // Email sending failed, but Supabase already sent default email
           // Se falhar, o Supabase já enviou o email padrão
         }
 

@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -118,12 +119,21 @@ const createProgress = async (req: Request, _match: RegExpMatchArray, supabase: 
     return errorResponse('Unauthorized', 401);
   }
 
-  const body = await req.json();
-  const { content_id, completed, time_spent, score } = body;
+  const progressSchema = z.object({
+    content_id: z.string().uuid('content_id deve ser um UUID válido'),
+    completed: z.boolean().optional(),
+    time_spent: z.number().int().min(0).optional(),
+    score: z.number().min(0).max(100).optional()
+  });
 
-  if (!content_id) {
-    return errorResponse('content_id is required');
+  const body = await req.json();
+  const validationResult = progressSchema.safeParse(body);
+
+  if (!validationResult.success) {
+    return errorResponse(`Dados inválidos: ${validationResult.error.message}`);
   }
+
+  const { content_id, completed, time_spent, score } = validationResult.data;
 
   const { data, error } = await supabase
     .from('user_progress')
@@ -193,8 +203,20 @@ const createStudySession = async (req: Request, _match: RegExpMatchArray, supaba
     return errorResponse('Unauthorized', 401);
   }
 
+  const sessionSchema = z.object({
+    content_id: z.string().uuid().optional(),
+    duration: z.number().int().min(0).max(86400).optional(),
+    focus_score: z.number().min(0).max(100).optional()
+  });
+
   const body = await req.json();
-  const { content_id, duration, focus_score } = body;
+  const validationResult = sessionSchema.safeParse(body);
+
+  if (!validationResult.success) {
+    return errorResponse(`Dados inválidos: ${validationResult.error.message}`);
+  }
+
+  const { content_id, duration, focus_score } = validationResult.data;
 
   const { data, error } = await supabase
     .from('study_sessions')
@@ -259,12 +281,22 @@ const createQuizAttempt = async (req: Request, _match: RegExpMatchArray, supabas
     return errorResponse('Unauthorized', 401);
   }
 
-  const body = await req.json();
-  const { quiz_id, score, total_questions, correct_answers, time_spent } = body;
+  const quizSchema = z.object({
+    quiz_id: z.string().uuid('quiz_id deve ser um UUID válido'),
+    score: z.number().min(0).max(100),
+    total_questions: z.number().int().min(1).optional(),
+    correct_answers: z.number().int().min(0).optional(),
+    time_spent: z.number().int().min(0).optional()
+  });
 
-  if (!quiz_id || score === undefined) {
-    return errorResponse('quiz_id and score are required');
+  const body = await req.json();
+  const validationResult = quizSchema.safeParse(body);
+
+  if (!validationResult.success) {
+    return errorResponse(`Dados inválidos: ${validationResult.error.message}`);
   }
+
+  const { quiz_id, score, total_questions, correct_answers, time_spent } = validationResult.data;
 
   const { data, error } = await supabase
     .from('quiz_attempts')

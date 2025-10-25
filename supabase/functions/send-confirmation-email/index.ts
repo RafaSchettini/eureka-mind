@@ -1,4 +1,5 @@
 import { Resend } from "https://esm.sh/resend@2.0.0";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -15,13 +16,33 @@ Deno.serve(async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { email, fullName, confirmationUrl } = await req.json();
+    // Input validation schema
+    const inputSchema = z.object({
+      email: z.string().email("Email inválido").max(255, "Email muito longo"),
+      fullName: z.string().trim().min(2, "Nome deve ter pelo menos 2 caracteres").max(100, "Nome muito longo").optional(),
+      confirmationUrl: z.string().url("URL de confirmação inválida").max(500, "URL muito longa")
+    });
 
-    if (!email) {
-      throw new Error("Email é obrigatório");
+    const body = await req.json();
+    
+    // Validate input
+    const validationResult = inputSchema.safeParse(body);
+    
+    if (!validationResult.success) {
+      console.error("Validation error:", validationResult.error.format());
+      return new Response(
+        JSON.stringify({ 
+          error: "Dados inválidos",
+          details: validationResult.error.format()
+        }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
     }
 
-    console.log("Enviando email de confirmação para:", email);
+    const { email, fullName, confirmationUrl } = validationResult.data;
 
     const emailHtml = `
       <!DOCTYPE html>
@@ -111,7 +132,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
       throw error;
     }
 
-    console.log("Email enviado com sucesso para:", email);
+    console.log("Email enviado com sucesso");
 
     return new Response(
       JSON.stringify({ message: "Email enviado com sucesso" }),
